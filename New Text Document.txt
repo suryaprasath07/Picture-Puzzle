@@ -1,0 +1,24 @@
+readimages("imagename.jpg",left margin,top margin width,width of the image,streatch of the image)
+bar is for creating a box(4 args starting and ending point of lines it will spaces within the line with color)
+line is for creating lines(4 args=starting points of left and top,ending point)
+circle(3 args=2 starting points,and radius)
+outtexty(3 args=2 starting points, and message)
+getch will wait until the character is entered
+cleardevice() will clear all the graphs
+setcolor will just set current drawing color
+setcolor(color)
+rectangle same 4 args
+(int)getmaxx will get maximum x coordinate
+for loop can create animation in the programs 
+cleardevice after every loop(so that there wont be any continuous drawing)
+delay(int in millisecond) will delay the next statement
+bar3d(6 args, will create a 3d bar 4 args as usual and 5th is for depth(pixels) 6th is for 1(on) and 0(off))
+settextstyle will set texting style of the program
+settextstyle(BOLD_FONT,HORIZ_DIR,number of times bigger than the default)
+initwindow(2 args width and height u need,"NAME OF THAT WINDOW",space from left side of window,space from top of window)
+getmaxwidth()
+getmaxheight()
+
+POINT variablename
+GetCursorPos(&variablename //will rewrite x and y coordinate)
+GetAsynckeyState(VK_LBUTTON) // if left key is pressed in mouse

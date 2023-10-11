@@ -2,6 +2,7 @@
 #include <graphics.h>
 #include <conio.h>
 #include <string.h>
+#include <string>
 using namespace std;
 
 const int x=getmaxwidth()/2;
@@ -9,176 +10,194 @@ const int y=getmaxheight()/2;
 
 struct node
 {
-    char image[20];
+    string image;
     int num;
     int lx;
     int ly;
     int hx;
     int hy;
-    struct node *left=NULL;
-    struct node *right=NULL;
-    struct node *up=NULL;
-    struct node *down=NULL;
-    struct node *prev=NULL;
-    struct node *start=NULL;
-    void insert(char a[])
+    struct node *left=nullptr;
+    struct node *right=nullptr;
+    struct node *up=nullptr;
+    struct node *down=nullptr;
+    struct node *prev=nullptr;
+    struct node *start=nullptr;
+    
+    void insert(std::string &a)
     {
-        if(start==NULL)
+        if (start == nullptr)
         {
-            struct node *p=new node;
-            p->num=1;
-            strcpy(p->image,a);
-            start=p;
-            prev=p;
-            p->lx=x-200;
-            p->ly=y-200;
-            p->hx=x-100;
-            p->hy=y-100;
+            createNewNode(a, x - 200, y - 200, x - 100, y - 100);
         }
         else
         {
-            struct node *p=new node;
-            strcpy(p->image,a);
-            p->num=prev->num+1;
-            if((prev->num)%3==1)
+            struct node *p = createNewNode(a);
+
+            if ((prev->num) % 3 == 1)
             {
-                p->left=prev;
-                if(start->right!=NULL)
-                {
-                    struct node *ptr=start->right;
-                    while(ptr->down!=NULL)
-                        ptr=ptr->down;
-                    ptr->down=p;
-                    p->up=ptr;
-                }
-                prev->right=p;
-                prev=p;
-                if(p->num==2)
-                {
-                    p->lx=x-96;
-                    p->ly=y-200;
-                    p->hx=x;
-                    p->hy=y-100;
-                }
-                else if(p->num==5)
-                {
-                    p->lx=x-96;
-                    p->ly=y-96;
-                    p->hx=x;
-                    p->hy=y+4;
-                }
-                else
-                {
-                    p->lx=x-96;
-                    p->ly=y+8;
-                    p->hx=x;
-                    p->hy=y+108;
-                }
+                insertAsLeftChild(p);
             }
-            else if((prev->num)%3==2)
+            else if ((prev->num) % 3 == 2)
             {
-                p->left=prev;
-                if((start->right)->right!=NULL)
-                {
-                    struct node *ptr=(start->right)->right;
-                    while(ptr->down!=NULL)
-                        ptr=ptr->down;
-                    ptr->down=p;
-                    p->up=ptr;
-                }
-                prev->right=p;
-                prev=p;
-                if(p->num==3)
-                {
-                    p->lx=x+4;
-                    p->ly=y-200;
-                    p->hx=x+100;
-                    p->hy=y-100;
-                }
-                else if(p->num==6)
-                {
-                    p->lx=x+4;
-                    p->ly=y-96;
-                    p->hx=x+100;
-                    p->hy=y+4;
-                }
-                else
-                {
-                    p->lx=x+4;
-                    p->ly=y+8;
-                    p->hx=x+100;
-                    p->hy=y+108;
-                }
+                insertAsMiddleChild(p);
             }
             else
             {
-                struct node *ptr=start;
-                while(ptr->down!=NULL)
+                insertAsRightChild(p);
+            }
+        }
+    }
+
+    void createNewNode(std::string &a, int lx, int ly, int hx, int hy)
+    {
+        unique_ptr<node> p = make_unique<node>();
+        p->num = 1;
+        strcpy(p->image, a);
+        start = p;
+        prev = p;
+        p->lx = lx;
+        p->ly = ly;
+        p->hx = hx;
+        p->hy = hy;
+    }
+
+    struct node *createNewNode(std::string &a)
+    {
+        unique_ptr<node> p = make_unique<node>();
+        strcpy(p->image, a);
+        p->num = prev->num + 1;
+        return p;
+    }
+
+    void insertAsLeftChild(struct node *p)
+    {
+        p->left = prev;
+        struct node *ptr = findInsertionPoint();
+        connectNodes(ptr, p);
+        prev = p;
+        setCoordinates(p, x - 96, y - 200, x, y - 100, x - 96, y - 96, x, y + 4, x - 96, y + 8, x, y + 108);
+    }
+
+    void insertAsMiddleChild(struct node *p)
+    {
+        p->left = prev;
+        struct node *ptr = findInsertionPoint();
+        connectNodes(ptr, p);
+        prev = p;
+        setCoordinates(p, x + 4, y - 200, x + 100, y - 100, x + 4, y - 96, x + 100, y + 4, x + 4, y + 8, x + 100, y + 108);
+    }
+
+    void insertAsRightChild(struct node *p)
+    {
+        struct node *ptr = start;
+        while (ptr->down != nullptr)
+        {
+            ptr = ptr->down;
+        }
+        p->up = ptr;
+        ptr->down = p;
+        prev = p;
+        setCoordinates(p, x - 200, y - 96, x - 100, y + 4, x - 200, y + 8, x - 100, y + 108);
+    }
+
+    struct node *findInsertionPoint()
+    {
+        if (start->right != nullptr)
+        {
+            struct node *ptr = start->right;
+            while (ptr->down != nullptr)
+            {
+                ptr = ptr->down;
+            }
+            return ptr;
+        }
+        return prev;
+    }
+
+    void connectNodes(struct node *parent, struct node *child)
+    {
+        parent->right = child;
+        child->up = parent;
+    }
+
+    void setCoordinates(struct node *p, int lx1, int ly1, int hx1, int hy1, int lx2, int ly2, int hx2, int hy2, int lx3, int ly3, int hx3, int hy3)
+    {
+        if (p->num == 2)
+        {
+            p->lx = lx1;
+            p->ly = ly1;
+            p->hx = hx1;
+            p->hy = hy1;
+        }
+        else if (p->num == 5)
+        {
+            p->lx = lx2;
+            p->ly = ly2;
+            p->hx = hx2;
+            p->hy = hy2;
+        }
+        else
+        {
+            p->lx = lx3;
+            p->ly = ly3;
+            p->hx = hx3;
+            p->hy = hy3;
+        }
+    }
+
+
+    void display()
+    {
+        struct node *ptr = start;
+        
+        while (ptr != nullptr)
+        {
+            cout << "\n\nNODE : " << ptr->num;
+            cout << "\nIMAGE : " << ptr->image;
+            ptr = ptr->down;
+        }
+
+        if (start != nullptr)
+        {
+            ptr = start->right;
+            while (ptr != nullptr)
+            {
+                cout << "\n\nNODE : " << ptr->num;
+                cout << "\nIMAGE : " << ptr->image;
+                ptr = ptr->down;
+            }
+            
+            if (start->right != nullptr)
+            {
+                ptr = start->right->right;
+                while (ptr != nullptr)
                 {
-                    ptr=ptr->down;
-                }
-                p->up=ptr;
-                ptr->down=p;
-                prev=p;
-                if(p->num==4)
-                {
-                    p->lx=x-200;
-                    p->ly=y-96;
-                    p->hx=x-100;
-                    p->hy=y+4;
-                }
-                else
-                {
-                    p->lx=x-200;
-                    p->ly=y+8;
-                    p->hx=x-100;
-                    p->hy=y+108;
+                    cout << "\n\nNODE : " << ptr->num;
+                    cout << "\nIMAGE : " << ptr->image;
+                    ptr = ptr->down;
                 }
             }
         }
     }
-    void display()
-    {
-        struct node *ptr=start;
-        while(ptr!=NULL)
-        {
-            cout<<"\n\nNODE : "<<ptr->num;
-            cout<<"\nIMAGE :"<<ptr->image;
-            ptr=ptr->down;
-        }
-        ptr=start->right;
-        while(ptr!=NULL)
-        {
-            cout<<"\n\nNODE : "<<ptr->num;
-            cout<<"\nIMAGE :"<<ptr->image;
-            ptr=ptr->down;
-        }
-        ptr=(start->right)->right;
-        while(ptr!=NULL)
-        {
-            cout<<"\n\nNODE : "<<ptr->num;
-            cout<<"\nIMAGE :"<<ptr->image;
-            ptr=ptr->down;
-        }
-    }
+
     node* get(int i)
     {
         struct node *ptr=start;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(ptr->num==i)
                 return ptr;
             ptr=ptr->right;
         }
         ptr=start->down;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(ptr->num==i)
                 return ptr;
             ptr=ptr->right;
         }
         ptr=start->down->down;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(ptr->num==i)
                 return ptr;
@@ -188,21 +207,21 @@ struct node
     node *getvoid()
     {
         struct node *ptr=start;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(strcmpi(ptr->image,"9.jpg")==0)
                 return ptr;
             ptr=ptr->right;
         }
         ptr=start->down;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(strcmpi(ptr->image,"9.jpg")==0)
                 return ptr;
             ptr=ptr->right;
         }
         ptr=start->down->down;
-        while(ptr!=NULL)
+        while(ptr!=nullptr)
         {
             if(strcmpi(ptr->image,"9.jpg")==0)
                 return ptr;
@@ -210,13 +229,16 @@ struct node
         }
     }
 }Q,Q1;
-void swapdata(node C,node *a,node *b)
+
+void swapdata(node C, node* a, node* b)
 {
-    char temp[10];
-    strcpy(temp,a->image);
-    strcpy(a->image,b->image);
-    strcpy(b->image,temp);
+    std::string temp;
+
+    temp = a->image;
+    a->image = b->image;
+    b->image = temp;
 }
+
 POINT picdisplay(node C)
 {
     node *p=C.get(1);
@@ -237,7 +259,7 @@ POINT picdisplay(node C)
     readimagefile(p->image,p->lx,p->ly,p->hx,p->hy);
     p=C.get(9);
     readimagefile(p->image,p->lx,p->ly,p->hx,p->hy);
-    while(1)
+    while(true)
     {
         if(GetAsyncKeyState(VK_LBUTTON))
         {
@@ -250,6 +272,7 @@ POINT picdisplay(node C)
 int nodeequal(node A1,node A2)
 {
     node *p1,*p2;
+    
     p1=A1.start;
     p2=A2.start;
     int i=1;
@@ -262,7 +285,7 @@ int nodeequal(node A1,node A2)
             p1=p1->right;
             p2=p2->right;
         }
-        if(p1==NULL)
+        if(p1==nullptr)
         {
             if(i==1)
             {
@@ -285,101 +308,62 @@ int nodeequal(node A1,node A2)
     else
         return 0;
 }
-int main()
-{
-    int j;
-    for(j=1;j<=9;j++)
-    {
+
+void initializePuzzle(node &Q, node &Q1) {
+    for (int j = 1; j <= 9; j++) {
         char a[30];
-        itoa(j,a,10);
-        strcat(a,".jpg");
+        itoa(j, a, 10);
+        strcat(a, ".jpg");
         Q.insert(a);
     }
-    int i;
-    int gm=DETECT,gd;
-    initwindow(getmaxwidth(),getmaxheight(),"IMAGE PUZZLE");
-    picdisplay(Q);
-    closegraph();
-    int shuffle[9];
-    /*for(i=1;i<10;i++)
-    {
-        int k=rand()%9+1;
-        for(j=0;j<i-1;j++)
-        {
-            if(shuffle[j]==k)
-                k=0;
-        }
-        if(k==0)
-            i--;
-        else
-            shuffle[i-1]=k;
-    }*/
 
-    shuffle[0]=1;
-    shuffle[1]=2;
-    shuffle[2]=3;
-    shuffle[3]=4;
-    shuffle[4]=5;
-    shuffle[5]=6;
-    shuffle[6]=7;
-    shuffle[7]=9;
-    shuffle[8]=8;            //FOR TESTING PURPOSE
-
-    for(i=0;i<9;i++)
-    {
-        struct node *p=Q.get(shuffle[i]);
+    int shuffle[] = {1, 2, 3, 4, 6, 5, 7, 8, 9};  // Adjust the shuffle order
+    for (int i = 0; i < 9; i++) {
+        struct node *p = Q.get(shuffle[i]);
         Q1.insert(p->image);
     }
+}
 
-    initwindow(getmaxwidth(),getmaxheight(),"IMAGE PUZZLE");
-
-    while(!nodeequal(Q,Q1))
-    {
+void performPuzzle(node &Q, node &Q1) {
+    initwindow(getmaxwidth(), getmaxheight(), "IMAGE PUZZLE");
+    while (!nodeequal(Q, Q1)) {
         POINT s;
-        s=picdisplay(Q1);
-        node *p;
-        p=Q1.getvoid();
-        if(p->left!=NULL)
-        {
-            if(s.x>=p->left->lx && s.x<=p->left->hx && s.y>=p->left->ly && s.y<=p->left->hy)
-            {
-                swapdata(Q1,p->left,p);
-            }
-        }
-        if(p->right!=NULL)
-        {
-            if(s.x>= p->right->lx && s.x<=p->right->hx && s.y>=p->right->ly && s.y<=p->right->hy)
-            {
-                swapdata(Q1,p->right,p);
-            }
-        }
-        if(p->up!=NULL)
-        {
-            if(s.x>= p->up->lx && s.x<=p->up->hx && s.y>=p->up->ly && s.y<=p->up->hy)
-            {
-                swapdata(Q1,p->up,p);
-            }
-        }
-        if(p->down!=NULL)
-        {
-            if(s.x>= p->down->lx && s.x<=p->down->hx && s.y>=p->down->ly && s.y<=p->down->hy)
-            {
-                swapdata(Q1,p->down,p);
-            }
-        }
+        s = picdisplay(Q1);
+        node *p = Q1.getvoid();
+
+        checkAndSwap(Q1, p->left, p, s);
+        checkAndSwap(Q1, p->right, p, s);
+        checkAndSwap(Q1, p->up, p, s);
+        checkAndSwap(Q1, p->down, p, s);
     }
     closegraph();
-    if(nodeequal(Q,Q1))
-    {
-        char str[]="WOW! you finished the puzzle";
-        for(int i=0;i<strlen(str);i++)
-        {
-            cout<<str[i];
+}
+
+void checkAndSwap(node &Q1, node* neighbor, node* p, POINT s) {
+    if (neighbor != nullptr && isPointInBounds(s, neighbor->lx, neighbor->ly, neighbor->hx, neighbor->hy)) {
+        swapdata(Q1, neighbor, p);
+    }
+}
+
+bool isPointInBounds(POINT s, int lx, int ly, int hx, int hy) {
+    return (s.x >= lx && s.x <= hx && s.y >= ly && s.y <= hy);
+}
+
+int main() {
+    node Q, Q1;
+
+    initializePuzzle(Q, Q1);
+    performPuzzle(Q, Q1);
+
+    if (nodeequal(Q, Q1)) {
+        const char *message = "WOW! You finished the puzzle";
+        for (int i = 0; i < strlen(message); i++) {
+            cout << message[i];
             Sleep(500);
         }
+    } else {
+        cout << "You haven't solved the puzzle";
     }
-    else
-    {
-        cout<<"You haven't solved the puzzle";
-    }
+
+    return 0;
 }
